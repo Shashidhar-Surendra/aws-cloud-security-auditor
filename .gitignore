@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# AWS — NEVER commit credentials or reports
+*.json
+!docs/required-iam-policy.json
+.env
+.aws/
+aws_credentials*
+
+# Audit reports (contain real AWS account data)
+aws_security_report_*.html
+aws_security_report_*.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
