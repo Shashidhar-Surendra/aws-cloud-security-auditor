@@ -1,6 +1,6 @@
 # AWS Cloud Security Auditor
 
-![CI](https://github.com/YOUR_USERNAME/aws-cloud-security-auditor/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/Shashidhar-Surendra/aws-cloud-security-auditor/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Version](https://img.shields.io/badge/version-5.1.0-green)
 ![Read-only](https://img.shields.io/badge/AWS-read--only-orange)
