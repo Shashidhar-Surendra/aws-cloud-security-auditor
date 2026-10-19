@@ -1,187 +1,130 @@
 # AWS Cloud Security Auditor
 
-![CI](https://github.com/Shashidhar-Surendra/aws-cloud-security-auditor/actions/workflows/ci.yml/badge.svg)
-![Python](https://img.shields.io/badge/python-3.11%2B-blue)
-![Version](https://img.shields.io/badge/version-5.1.0-green)
-![Read-only](https://img.shields.io/badge/AWS-read--only-orange)
+**Version 5.1.0** | Read-only | Python 3.11+ | Windows · macOS · Linux
 
-A read-only, evidence-based AWS security misconfiguration auditing prototype for the MSc COM7014 project (tool version 5.0.0).
-
-> ⚠️ **Read-only tool. No changes are made to your AWS account.**
+> A free, open-source tool that scans your AWS account for common security misconfigurations, scores your posture against the CIS AWS Foundations Benchmark v1.5.0, and maps findings to GDPR Article 32 and NIS2 Article 21 obligations. Designed for students, developers, and IT teams at small-to-medium enterprises (SMEs).
 
 ---
 
-## Quick Start — choose your path
+## What it does
 
-### 🖥️ Windows users (no coding needed)
-
-1. Install [Python 3.11+](https://python.org) — tick **"Add Python to PATH"** during setup
-2. Install dependencies once:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Double-click **`run_audit_gui.bat`**
-4. Select your AWS region, enter your profile name, click **▶ Run Audit**
-5. The HTML report opens automatically when the scan finishes
-
-> First time? See **[AWS Credentials Setup](#aws-credentials-setup)** below.
+- Runs **10 core security checks** across S3, IAM, EC2, CloudTrail, and CloudWatch
+- Produces a **Security Score**, **GDPR Score**, and **NIS2 Score** (each out of 100)
+- Generates a **human-readable HTML report** and a machine-readable **JSON report**
+- Makes **zero changes** to your AWS account — read-only API calls only
+- Explains each finding and provides **step-by-step remediation guidance**
 
 ---
 
-### 🍎🐧 macOS / Linux users (one-command setup)
+## Security checks performed
+
+| Check ID | Service | What it checks |
+|----------|---------|----------------|
+| S3-001 | S3 | Public access block enabled on all buckets |
+| S3-002 | S3 | Default server-side encryption enabled |
+| S3-003 | S3 | Versioning enabled on buckets |
+| IAM-001 | IAM | MFA enabled for all IAM users with console access |
+| IAM-002 | IAM | Password policy meets minimum strength requirements |
+| IAM-003 | IAM | No IAM users with excessive administrator privileges |
+| IAM-004 | IAM | MFA enabled on the root account |
+| EC2-001 | EC2 | No security groups allow SSH (port 22) open to the world |
+| EC2-002 | EC2 | No security groups allow RDP (port 3389) open to the world |
+| CT-001 | CloudTrail | CloudTrail logging is enabled |
+| MON-001 | CloudWatch | CloudTrail is integrated with CloudWatch monitoring |
+
+---
+
+## Choose your path
+
+| I am… | Go to… |
+|-------|--------|
+| New to coding or AWS | [Non-Coder Guide (A to Z)](docs/GUIDE_NON_CODER.md) |
+| Comfortable with Python and CLI | [Developer Guide](docs/GUIDE_DEVELOPER.md) |
+| Looking to fix findings | [Remediation Guide](docs/REMEDIATION_GUIDE.md) |
+
+---
+
+## Quick start (developers)
 
 ```bash
-chmod +x run_audit.sh
-./run_audit.sh
-```
+# 1. Clone the repository
+git clone https://github.com/Shashidhar-Surendra/aws-cloud-security-auditor.git
+cd aws-cloud-security-auditor
 
-The script creates a virtual environment, installs dependencies, asks for your region, runs the audit, and opens the HTML report automatically.
-
-> First time? See **[AWS Credentials Setup](#aws-credentials-setup)** below.
-
----
-
-### 💻 Developer / CLI
-
-```bash
+# 2. Create and activate a virtual environment
 python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# Linux/macOS:
-source .venv/bin/activate
+source .venv/bin/activate        # macOS / Linux
+.venv\Scripts\activate           # Windows
 
+# 3. Install dependencies
 pip install -r requirements.txt
 
-aws configure --profile audit-readonly
+# 4. Configure AWS credentials (read-only IAM user recommended)
+aws configure
 
-python main.py --profile audit-readonly --region eu-central-1
+# 5. Run the audit
+python main.py --region eu-central-1 --output-dir reports
+
+# 6. Open the report
+# Reports are saved to:  reports/aws_audit_YYYYMMDD_HHMMSS.html
 ```
 
-Outputs are written to `reports/` by default. Use `--output-dir` to change the folder.
+See [docs/required-iam-policy.json](docs/required-iam-policy.json) for the minimum IAM permissions needed.
 
 ---
 
-## AWS Credentials Setup
+## Report output
 
-1. [Create an IAM user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) in your AWS account
-2. Attach the **`AWSSecurityAuditorReadOnly`** policy — copy the JSON from [`docs/required-iam-policy.json`](docs/required-iam-policy.json)
-3. Generate an Access Key for that user (IAM → Users → Security credentials)
-4. Run `aws configure` and enter your Access Key ID and Secret Access Key:
-   ```
-   aws configure
-   AWS Access Key ID: <paste here>
-   AWS Secret Access Key: <paste here>
-   Default region name: eu-central-1
-   ```
+After the audit completes, two files are saved to the `reports/` folder:
 
-> **Never hard-code credentials in source code.**
+- `aws_audit_YYYYMMDD_HHMMSS.html` — Open in any web browser. Shows scores, findings, and remediation steps.
+- `aws_audit_YYYYMMDD_HHMMSS.json` — Machine-readable data for developers and integrations.
 
 ---
 
-## Scope
+## Important limitations
 
-### 10 core checks (COM7014 approved scope)
-
-| Check ID | Control | Severity | Benchmark |
-|----------|---------|----------|-----------|
-| S3-001 | S3 public access block | CRITICAL | CIS 2.1.5 |
-| S3-002 | S3 server-side encryption | HIGH | CIS 2.1.1 |
-| S3-003 | S3 versioning | MEDIUM | — |
-| IAM-001 | IAM user MFA | HIGH | CIS 1.10 |
-| IAM-002 | IAM account password policy | HIGH | CIS 1.8–1.12 |
-| IAM-003 | IAM excessive administrator privileges | HIGH | CIS 1.16 |
-| EC2-001 | EC2 SSH exposure (port 22) | HIGH | CIS 5.2 |
-| EC2-002 | EC2 RDP exposure (port 3389) | HIGH | CIS 5.2 |
-| CT-001 | CloudTrail logging | HIGH | CIS 3.1 |
-| MON-001 | CloudTrail CloudWatch Logs integration *(provisional)* | MEDIUM | CIS 4.x |
-
-CIS references: CIS AWS Foundations Benchmark v1.5.0.
-
-MON-001 is marked **provisional** because the monitoring control is not fully defined in the approved project scope.
-
-### Additional check (beyond approved scope)
-
-| Check ID | Control | Severity |
-|----------|---------|----------|
-| IAM-004 | Root account MFA | CRITICAL |
-
-IAM-004 is included as a scope extension. Confirm with your supervisor before including it in the final submission.
-
-### Known scope limitations
-
-- **S3-001** evaluates the four Block Public Access settings only. Bucket-level ACL and bucket-policy analysis is outside scope.
-- **CloudTrail** discovers trails in the configured session region only. Cross-region coverage requires a multi-region trail.
-- **Scoring** applies each check's penalty at most once, regardless of how many resources fail.
+- This tool is an **indicator**, not a certification. Scores reflect the implemented checks only.
+- It does **not** guarantee GDPR or NIS2 legal compliance.
+- It does **not** modify, remediate, or automatically fix any AWS resource.
+- Some checks require specific IAM permissions. If permissions are missing, findings are marked `WARN` or `ENGINE-ERROR` rather than failing silently.
+- Always run this tool against a **test or non-production AWS account** first.
 
 ---
 
-## Scoring methodology
+## AWS costs
 
-| Severity | Security penalty | GDPR indicator | NIS2 indicator |
-|----------|-----------------|----------------|----------------|
-| CRITICAL | −20 | −16 | −16 |
-| HIGH | −10 | −8 | −8 |
-| MEDIUM | −5 | −4 | −4 |
-| LOW | −2 | −1.6 | −1.6 |
-| INFO | 0 | 0 | 0 |
-
-GDPR and NIS2 scores apply an 0.8 multiplier on mapped security penalties.
-
-> **Important:** These scores represent only the controls in this tool. They are not AWS-wide security certification, GDPR compliance certification, or NIS2 compliance certification.
+This tool makes read-only API calls. Most calls fall within AWS Free Tier limits. However:
+- AWS may charge for API calls on some services depending on your account tier.
+- Review [AWS Pricing](https://aws.amazon.com/pricing/) before running on a production account.
 
 ---
 
-## Version and reproducibility
+## Credential safety
 
-- Tool version: **5.0.0**
-- `requirements-lock.txt` pins validated project dependencies
-- Controlled experiments must record: Python version, OS/architecture, AWS region, tool version, dependency lock file
+- **Never share your AWS Access Key or Secret Key** with anyone.
+- **Never commit credentials** to Git. The `.gitignore` in this repository blocks common credential files.
+- Use a dedicated read-only IAM user for auditing — see [docs/required-iam-policy.json](docs/required-iam-policy.json).
 
-## Architecture
+---
 
-```
-AWS → collectors/checks → Finding model → risk scoring → compliance mapping → HTML/JSON report
-```
-
-## Safety
-
-- Read-only AWS API calls only (14 actions — see `docs/required-iam-policy.json`)
-- Never hard-code credentials
-- Test only in an AWS account you are authorised to assess
-- The tool does not create, modify, or delete any AWS resources
-
-## Before using as the dissertation-final version
-
-This is a strong implementation baseline. Before final submission:
-- Verify every AWS API/check against current AWS documentation
-- Freeze the exact ten controls with your supervisor
-- Verify every GDPR/NIS2 mapping against authoritative sources
-- Run the controlled AWS test matrix and record real TP/TN/FP/FN results
-- Add the final least-privilege IAM policy after all API calls are frozen
-
-
-## User Interfaces
-
-### Windows — non-technical users
-
-Double-click `run_audit_gui.bat` to launch the desktop interface.
-
-### macOS/Linux — non-technical users
-
-Run:
+## Running tests
 
 ```bash
-./run_audit.sh
+pip install pytest
+pytest tests/
 ```
 
-The launcher creates the local virtual environment, installs dependencies, asks for the AWS region/profile, and runs the existing CLI.
+---
 
-### Developers
+## Project context
 
-Run the CLI directly:
+This tool was developed as part of an MSc Cybersecurity dissertation at Arden University Berlin (2026), titled:
 
-```bash
-python main.py --region eu-central-1 --profile default
-```
+> *AWS Cloud Security Misconfiguration Auditing Tool with GDPR and NIS2 Compliance Mapping for German SMEs*
 
-The GUI and CLI both use `auditor.runner.run_audit()`. The security-control implementation remains in the auditor package.
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.
